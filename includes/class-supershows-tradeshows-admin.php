@@ -150,9 +150,8 @@ class SuperShows_TradeShows_Admin {
 		$industries     = self::parse_csv_values( $industries_csv );
 
 		$logo_image_id        = self::sanitize_absint_or_null( $_POST['logo_wordpress_image_id'] ?? '' );
-		$homepage_screenshot  = self::sanitize_absint_or_null( $_POST['homepage_screenshot_id'] ?? '' );
 		$gallery_image_ids    = self::parse_csv_int_values( $_POST['gallery_image_ids'] ?? '' );
-		$page_id              = self::sanitize_absint_or_null( $_POST['page_id'] ?? '' );
+		$page_id              = null;
 		$description          = isset( $_POST['description'] ) ? wp_kses_post( wp_unslash( $_POST['description'] ) ) : '';
 
 		$address_json = wp_json_encode(
@@ -168,7 +167,6 @@ class SuperShows_TradeShows_Admin {
 		$imagery_json = wp_json_encode(
 			array(
 				'logo_image_id'         => $logo_image_id,
-				'homepage_screenshot_id' => $homepage_screenshot,
 				'gallery_image_ids'     => $gallery_image_ids,
 			)
 		);
@@ -254,24 +252,22 @@ class SuperShows_TradeShows_Admin {
 			<input type="hidden" name="action" value="supershows_tradeshows_create" />
 			<?php wp_nonce_field( 'supershows_tradeshows_create' ); ?>
 
-			<div class="supershows-card">
-				<h3><?php esc_html_e( 'Trade Show Basics', 'supershows-tradeshows-directory' ); ?></h3>
-				<div class="supershows-grid supershows-grid-4">
-					<?php self::render_text_field( 'name', __( 'Trade Show Name', 'supershows-tradeshows-directory' ), '', true ); ?>
-					<?php self::render_text_field( 'industries', __( 'Industries (comma separated)', 'supershows-tradeshows-directory' ) ); ?>
-					<?php self::render_number_field( 'page_id', __( 'Related WordPress Page ID', 'supershows-tradeshows-directory' ) ); ?>
-					<?php self::render_url_field( 'related_url', __( 'Website URL', 'supershows-tradeshows-directory' ) ); ?>
+				<div class="supershows-card">
+					<h3><?php esc_html_e( 'Trade Show Basics', 'supershows-tradeshows-directory' ); ?></h3>
+					<div class="supershows-grid supershows-grid-4">
+						<?php self::render_text_field( 'name', __( 'Trade Show Name', 'supershows-tradeshows-directory' ), '', true ); ?>
+						<?php self::render_text_field( 'industries', __( 'Industries (comma separated)', 'supershows-tradeshows-directory' ) ); ?>
+						<?php self::render_url_field( 'related_url', __( 'Website URL', 'supershows-tradeshows-directory' ) ); ?>
+					</div>
 				</div>
-			</div>
 
-			<div class="supershows-card">
-				<h3><?php esc_html_e( 'Logos & Imagery', 'supershows-tradeshows-directory' ); ?></h3>
-				<div class="supershows-grid supershows-grid-3">
-					<?php self::render_media_field( 'logo_wordpress_image_id', __( 'Logo Image (WordPress Media)', 'supershows-tradeshows-directory' ), false ); ?>
-					<?php self::render_media_field( 'homepage_screenshot_id', __( 'Homepage Screenshot', 'supershows-tradeshows-directory' ), false ); ?>
-					<?php self::render_media_field( 'gallery_image_ids', __( 'Gallery Images', 'supershows-tradeshows-directory' ), true ); ?>
+				<div class="supershows-card">
+					<h3><?php esc_html_e( 'Logos & Imagery', 'supershows-tradeshows-directory' ); ?></h3>
+					<div class="supershows-grid supershows-grid-3">
+						<?php self::render_media_field( 'logo_wordpress_image_id', __( 'Logo Image (WordPress Media)', 'supershows-tradeshows-directory' ), false ); ?>
+						<?php self::render_media_field( 'gallery_image_ids', __( 'Gallery Images', 'supershows-tradeshows-directory' ), true ); ?>
+					</div>
 				</div>
-			</div>
 
 			<div class="supershows-card">
 				<h3><?php esc_html_e( 'Contact & Web Presence', 'supershows-tradeshows-directory' ); ?></h3>
@@ -507,23 +503,6 @@ class SuperShows_TradeShows_Admin {
 		<div>
 			<label class="supershows-label" for="supershows-<?php echo esc_attr( $name ); ?>"><?php echo esc_html( $label ); ?></label>
 			<input type="text" id="supershows-<?php echo esc_attr( $name ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text supershows-input" value="<?php echo esc_attr( $value ); ?>" <?php echo $required ? 'required' : ''; ?> />
-		</div>
-		<?php
-	}
-
-	/**
-	 * Renders number input field.
-	 *
-	 * @param string $name  Field name.
-	 * @param string $label Field label.
-	 *
-	 * @return void
-	 */
-	private static function render_number_field( string $name, string $label ): void {
-		?>
-		<div>
-			<label class="supershows-label" for="supershows-<?php echo esc_attr( $name ); ?>"><?php echo esc_html( $label ); ?></label>
-			<input type="number" min="1" id="supershows-<?php echo esc_attr( $name ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text supershows-input" />
 		</div>
 		<?php
 	}
