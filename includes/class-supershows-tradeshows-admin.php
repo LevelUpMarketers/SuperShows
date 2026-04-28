@@ -238,7 +238,58 @@ class SuperShows_TradeShows_Admin {
 			self::redirect_with_notice( 'error', __( 'Unable to save trade show. Please try again.', 'supershows-tradeshows-directory' ) );
 		}
 
-		self::redirect_with_notice( 'success', __( 'Trade show saved.', 'supershows-tradeshows-directory' ) );
+		$trade_show_id = (int) $wpdb->insert_id;
+		$page_id       = self::create_trade_show_page( $name, $start_year, $description );
+
+		if ( null !== $page_id ) {
+			$wpdb->update(
+				$table_name,
+				array(
+					'page_id' => $page_id,
+				),
+				array(
+					'id' => $trade_show_id,
+				),
+				array( '%d' ),
+				array( '%d' )
+			);
+
+			self::redirect_with_notice( 'success', __( 'Trade show and linked WordPress page saved.', 'supershows-tradeshows-directory' ) );
+		}
+
+		self::redirect_with_notice( 'error', __( 'Trade show saved, but the WordPress page could not be created.', 'supershows-tradeshows-directory' ) );
+	}
+
+	/**
+	 * Creates a WordPress page for the trade show.
+	 *
+	 * @param string   $name        Trade show name.
+	 * @param int|null $start_year  Trade show start year.
+	 * @param string   $description Trade show description content.
+	 *
+	 * @return int|null
+	 */
+	private static function create_trade_show_page( string $name, ?int $start_year, string $description ): ?int {
+		$year       = $start_year ?? (int) gmdate( 'Y' );
+		$page_title = trim( sprintf( '%s %d', $name, $year ) );
+		$page_slug  = sanitize_title( $page_title );
+
+		$page_id = wp_insert_post(
+			array(
+				'post_type'    => 'page',
+				'post_title'   => $page_title,
+				'post_name'    => $page_slug,
+				'post_status'  => 'publish',
+				'post_content' => $description,
+			),
+			true
+		);
+
+		if ( is_wp_error( $page_id ) ) {
+			return null;
+		}
+
+		return (int) $page_id;
 	}
 
 	/**
