@@ -55,3 +55,71 @@
 .supershows-media-wrap .button {
 	white-space: nowrap;
 }
+
+.supershows-edit-wrap {
+	margin-top: 16px;
+}
+
+.supershows-accordion-list {
+	border: 1px solid #dcdcde;
+	background: #fff;
+}
+
+.supershows-accordion-row {
+	display: grid;
+	grid-template-columns: 1.4fr 1fr 0.6fr 1.3fr 0.6fr;
+	gap: 14px;
+	padding: 14px 20px;
+	align-items: center;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.supershows-accordion-head {
+	font-weight: 700;
+	background: #f6f7f7;
+}
+
+.supershows-accordion-item:last-child .supershows-accordion-row {
+	border-bottom: none;
+}
+
+.supershows-actions-cell {
+	text-align: right;
+}
+
+.supershows-accordion-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.supershows-accordion-toggle .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+.supershows-accordion-toggle[aria-expanded='true'] .dashicons {
+	transform: rotate(180deg);
+}
+
+.supershows-accordion-panel {
+	background: #f6f7f7;
+	padding: 18px;
+	border-top: 1px solid #ececec;
+}
+
+.supershows-textarea {
+	width: 100%;
+}
+
+.supershows-thumb-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: flex-start;
+}
+
+.supershows-thumb {
+	margin-top: 8px;
+}

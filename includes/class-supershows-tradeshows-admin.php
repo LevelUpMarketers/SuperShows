@@ -102,7 +102,7 @@ class SuperShows_TradeShows_Admin {
 				</a>
 			</h2>
 			<?php if ( 'edit' === $active_tab ) : ?>
-				<?php self::render_edit_placeholder(); ?>
+				<?php self::render_edit_tab(); ?>
 			<?php else : ?>
 				<?php self::render_create_form(); ?>
 			<?php endif; ?>
@@ -368,16 +368,219 @@ class SuperShows_TradeShows_Admin {
 	}
 
 	/**
-	 * Renders edit tab placeholder.
+	 * Renders edit tab with accordion rows for existing entries.
 	 *
 	 * @return void
 	 */
-	private static function render_edit_placeholder(): void {
+	private static function render_edit_tab(): void {
+		$trade_shows = self::get_trade_shows();
 		?>
-		<div class="notice notice-info inline">
-			<p><?php esc_html_e( 'Edit functionality will be added in a subsequent update. Use the Create tab to add new trade shows.', 'supershows-tradeshows-directory' ); ?></p>
+		<div class="supershows-edit-wrap">
+			<h2><?php esc_html_e( 'Edit Trade Show', 'supershows-tradeshows-directory' ); ?></h2>
+			<p class="description"><?php esc_html_e( 'Review saved trade shows and expand an entry to inspect all stored fields.', 'supershows-tradeshows-directory' ); ?></p>
+
+			<?php if ( empty( $trade_shows ) ) : ?>
+				<div class="notice notice-info inline">
+					<p><?php esc_html_e( 'No trade shows found yet. Add one from the Create Trade Show tab.', 'supershows-tradeshows-directory' ); ?></p>
+				</div>
+			<?php else : ?>
+				<div class="supershows-accordion-list">
+					<div class="supershows-accordion-head supershows-accordion-row">
+						<div><?php esc_html_e( 'Trade Show Name', 'supershows-tradeshows-directory' ); ?></div>
+						<div><?php esc_html_e( 'Industries', 'supershows-tradeshows-directory' ); ?></div>
+						<div><?php esc_html_e( 'Year', 'supershows-tradeshows-directory' ); ?></div>
+						<div><?php esc_html_e( 'Website', 'supershows-tradeshows-directory' ); ?></div>
+						<div><?php esc_html_e( 'Actions', 'supershows-tradeshows-directory' ); ?></div>
+					</div>
+					<?php foreach ( $trade_shows as $trade_show ) : ?>
+						<?php self::render_edit_accordion_row( $trade_show ); ?>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Renders one accordion row for a saved trade show.
+	 *
+	 * @param object $trade_show Trade show row.
+	 *
+	 * @return void
+	 */
+	private static function render_edit_accordion_row( object $trade_show ): void {
+		$address_data  = self::decode_json_assoc( $trade_show->address_json ?? '' );
+		$imagery_data  = self::decode_json_assoc( $trade_show->imagery_json ?? '' );
+		$gallery_ids   = self::normalize_int_array( $imagery_data['gallery_image_ids'] ?? array() );
+		$industries    = self::decode_json_list( $trade_show->industries_json ?? '' );
+		$section_id    = 'supershows-entry-' . (int) $trade_show->id;
+		$logo_image_id = absint( $trade_show->logo_wordpress_image_id ?? 0 );
+		?>
+		<div class="supershows-accordion-item">
+			<div class="supershows-accordion-row">
+				<div><?php echo esc_html( $trade_show->name ?? '' ); ?></div>
+				<div><?php echo esc_html( implode( ', ', $industries ) ); ?></div>
+				<div><?php echo esc_html( (string) ( $trade_show->start_year ?? '' ) ); ?></div>
+				<div>
+					<?php if ( ! empty( $trade_show->related_url ) ) : ?>
+						<a href="<?php echo esc_url( $trade_show->related_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $trade_show->related_url ); ?></a>
+					<?php endif; ?>
+				</div>
+				<div class="supershows-actions-cell">
+					<button type="button" class="button-link supershows-accordion-toggle" aria-expanded="false" aria-controls="<?php echo esc_attr( $section_id ); ?>">
+						<?php esc_html_e( 'Edit', 'supershows-tradeshows-directory' ); ?>
+						<span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>
+					</button>
+				</div>
+			</div>
+
+			<div id="<?php echo esc_attr( $section_id ); ?>" class="supershows-accordion-panel" hidden>
+				<div class="supershows-card">
+					<h3><?php esc_html_e( 'Trade Show Basics', 'supershows-tradeshows-directory' ); ?></h3>
+					<div class="supershows-grid supershows-grid-4">
+						<?php self::render_readonly_field( __( 'Trade Show Name', 'supershows-tradeshows-directory' ), (string) ( $trade_show->name ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'Industries', 'supershows-tradeshows-directory' ), implode( ', ', $industries ) ); ?>
+						<?php self::render_readonly_field( __( 'Website URL', 'supershows-tradeshows-directory' ), (string) ( $trade_show->related_url ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'Linked Page ID', 'supershows-tradeshows-directory' ), (string) ( $trade_show->page_id ?? '' ) ); ?>
+					</div>
+				</div>
+
+				<div class="supershows-card">
+					<h3><?php esc_html_e( 'Logos & Imagery', 'supershows-tradeshows-directory' ); ?></h3>
+					<div class="supershows-grid supershows-grid-3">
+						<div>
+							<?php self::render_readonly_field( __( 'Logo Image ID', 'supershows-tradeshows-directory' ), (string) $logo_image_id ); ?>
+							<?php if ( $logo_image_id > 0 ) : ?>
+								<div class="supershows-thumb"><?php echo wp_kses_post( wp_get_attachment_image( $logo_image_id, array( 120, 120 ) ) ); ?></div>
+							<?php endif; ?>
+						</div>
+						<?php self::render_readonly_field( __( 'Gallery Image IDs', 'supershows-tradeshows-directory' ), implode( ',', $gallery_ids ) ); ?>
+						<div class="supershows-thumb-list">
+							<?php foreach ( $gallery_ids as $gallery_id ) : ?>
+								<?php $thumbnail = wp_get_attachment_image( $gallery_id, array( 80, 80 ) ); ?>
+								<?php if ( ! empty( $thumbnail ) ) : ?>
+									<div class="supershows-thumb"><?php echo wp_kses_post( $thumbnail ); ?></div>
+								<?php endif; ?>
+							<?php endforeach; ?>
+						</div>
+					</div>
+				</div>
+
+				<div class="supershows-card">
+					<h3><?php esc_html_e( 'Contact & Web Presence', 'supershows-tradeshows-directory' ); ?></h3>
+					<div class="supershows-grid supershows-grid-4">
+						<?php self::render_readonly_field( __( 'Phone Number', 'supershows-tradeshows-directory' ), (string) ( $trade_show->contact_phone ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'Email', 'supershows-tradeshows-directory' ), (string) ( $trade_show->contact_email ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'Facebook URL', 'supershows-tradeshows-directory' ), (string) ( $trade_show->facebook_url ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'Instagram URL', 'supershows-tradeshows-directory' ), (string) ( $trade_show->instagram_url ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'LinkedIn URL', 'supershows-tradeshows-directory' ), (string) ( $trade_show->linkedin_url ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'YouTube URL', 'supershows-tradeshows-directory' ), (string) ( $trade_show->youtube_url ?? '' ) ); ?>
+					</div>
+				</div>
+
+				<div class="supershows-card">
+					<h3><?php esc_html_e( 'Location & Dates', 'supershows-tradeshows-directory' ); ?></h3>
+					<div class="supershows-grid supershows-grid-5">
+						<?php self::render_readonly_field( __( 'Street Address', 'supershows-tradeshows-directory' ), (string) ( $address_data['street'] ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'City', 'supershows-tradeshows-directory' ), (string) ( $trade_show->address_city ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'State', 'supershows-tradeshows-directory' ), (string) ( $trade_show->address_state ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'Zip Code', 'supershows-tradeshows-directory' ), (string) ( $trade_show->address_zip ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'Country', 'supershows-tradeshows-directory' ), (string) ( $address_data['country'] ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'Start Date/Time', 'supershows-tradeshows-directory' ), (string) ( $trade_show->start_datetime ?? '' ) ); ?>
+						<?php self::render_readonly_field( __( 'End Date/Time', 'supershows-tradeshows-directory' ), (string) ( $trade_show->end_datetime ?? '' ) ); ?>
+					</div>
+				</div>
+
+				<div class="supershows-card">
+					<h3><?php esc_html_e( 'Description', 'supershows-tradeshows-directory' ); ?></h3>
+					<div>
+						<label class="supershows-label"><?php esc_html_e( 'Trade Show Description', 'supershows-tradeshows-directory' ); ?></label>
+						<textarea class="supershows-textarea" rows="8" readonly><?php echo esc_textarea( wp_strip_all_tags( (string) ( $trade_show->description ?? '' ) ) ); ?></textarea>
+					</div>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Loads trade show rows ordered by newest first.
+	 *
+	 * @return object[]
+	 */
+	private static function get_trade_shows(): array {
+		global $wpdb;
+
+		$table_name = SuperShows_TradeShows_Activator::table_name();
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$results = $wpdb->get_results( "SELECT * FROM {$table_name} ORDER BY id DESC" );
+		// phpcs:enable
+
+		return is_array( $results ) ? $results : array();
+	}
+
+	/**
+	 * Decodes JSON string into associative array.
+	 *
+	 * @param mixed $json JSON string.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function decode_json_assoc( $json ): array {
+		if ( ! is_string( $json ) || '' === $json ) {
+			return array();
+		}
+
+		$decoded = json_decode( $json, true );
+		return is_array( $decoded ) ? $decoded : array();
+	}
+
+	/**
+	 * Decodes JSON list into string array.
+	 *
+	 * @param mixed $json JSON string.
+	 *
+	 * @return string[]
+	 */
+	private static function decode_json_list( $json ): array {
+		if ( ! is_string( $json ) || '' === $json ) {
+			return array();
+		}
+
+		$decoded = json_decode( $json, true );
+		if ( ! is_array( $decoded ) ) {
+			return array();
+		}
+
+		return array_values(
+			array_filter(
+				array_map(
+					static fn( $value ) => is_scalar( $value ) ? (string) $value : '',
+					$decoded
+				),
+				static fn( string $value ) => '' !== $value
+			)
+		);
+	}
+
+	/**
+	 * Normalizes mixed values to unique positive integer array.
+	 *
+	 * @param mixed $values Potential list values.
+	 *
+	 * @return int[]
+	 */
+	private static function normalize_int_array( $values ): array {
+		if ( ! is_array( $values ) ) {
+			return array();
+		}
+
+		$ints = array_filter(
+			array_map( 'absint', $values ),
+			static fn( int $value ) => $value > 0
+		);
+
+		return array_values( array_unique( $ints ) );
 	}
 
 	/**
@@ -555,6 +758,23 @@ class SuperShows_TradeShows_Admin {
 		<div>
 			<label class="supershows-label" for="supershows-<?php echo esc_attr( $name ); ?>"><?php echo esc_html( $label ); ?></label>
 			<input type="text" id="supershows-<?php echo esc_attr( $name ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text supershows-input" value="<?php echo esc_attr( $value ); ?>" <?php echo $required ? 'required' : ''; ?> />
+		</div>
+		<?php
+	}
+
+	/**
+	 * Renders a readonly field for edit-tab display.
+	 *
+	 * @param string $label Field label.
+	 * @param string $value Field value.
+	 *
+	 * @return void
+	 */
+	private static function render_readonly_field( string $label, string $value ): void {
+		?>
+		<div>
+			<label class="supershows-label"><?php echo esc_html( $label ); ?></label>
+			<input type="text" class="regular-text supershows-input" value="<?php echo esc_attr( $value ); ?>" readonly />
 		</div>
 		<?php
 	}

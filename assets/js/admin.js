@@ -35,4 +35,19 @@
 
 		frame.open();
 	});
+
+	$(document).on('click', '.supershows-accordion-toggle', function (event) {
+		event.preventDefault();
+
+		const toggle = $(this);
+		const sectionId = toggle.attr('aria-controls');
+		const panel = $('#' + sectionId);
+		if (!panel.length) {
+			return;
+		}
+
+		const isExpanded = toggle.attr('aria-expanded') === 'true';
+		toggle.attr('aria-expanded', isExpanded ? 'false' : 'true');
+		panel.attr('hidden', isExpanded);
+	});
 })(jQuery);
