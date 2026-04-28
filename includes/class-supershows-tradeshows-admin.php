@@ -221,6 +221,7 @@ class SuperShows_TradeShows_Admin {
 				'%s',
 				'%s',
 				'%s',
+				'%s',
 				'%d',
 				'%d',
 				'%s',
