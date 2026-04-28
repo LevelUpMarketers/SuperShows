@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'SUPERSHOWS_TRADE_SHOWS_VERSION', '0.1.0' );
 define( 'SUPERSHOWS_TRADE_SHOWS_FILE', __FILE__ );
 define( 'SUPERSHOWS_TRADE_SHOWS_PATH', plugin_dir_path( __FILE__ ) );
-define( 'SUPERSHOWS_TRADE_SHOWS_DB_VERSION', '1.0.0' );
+define( 'SUPERSHOWS_TRADE_SHOWS_DB_VERSION', '1.1.0' );
 
 require_once SUPERSHOWS_TRADE_SHOWS_PATH . 'includes/class-supershows-tradeshows-activator.php';
 

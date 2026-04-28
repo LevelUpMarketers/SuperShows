@@ -9,6 +9,7 @@ Custom WordPress plugin for SuperPath (`superpath.com`) that stores trade show d
 - Stores raw JSON blobs for structured fields (`address`, `imagery`, `dates`, `industries`) while also storing searchable/sortable columns for key query paths:
   - `address_city`, `address_state`, `address_zip`
   - `start_datetime`, `start_month`, `start_year`
+  - `logo_wordpress_image_id`
   - `industries_search`
 
 ## Notes
