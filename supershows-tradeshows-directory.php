@@ -20,9 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'SUPERSHOWS_TRADE_SHOWS_VERSION', '0.1.0' );
 define( 'SUPERSHOWS_TRADE_SHOWS_FILE', __FILE__ );
 define( 'SUPERSHOWS_TRADE_SHOWS_PATH', plugin_dir_path( __FILE__ ) );
+define( 'SUPERSHOWS_TRADE_SHOWS_URL', plugin_dir_url( __FILE__ ) );
 define( 'SUPERSHOWS_TRADE_SHOWS_DB_VERSION', '1.1.0' );
 
 require_once SUPERSHOWS_TRADE_SHOWS_PATH . 'includes/class-supershows-tradeshows-activator.php';
+require_once SUPERSHOWS_TRADE_SHOWS_PATH . 'includes/class-supershows-tradeshows-admin.php';
 
 /**
  * Runs plugin activation tasks.
@@ -33,3 +35,7 @@ function supershows_tradeshows_activate(): void {
 	SuperShows_TradeShows_Activator::activate();
 }
 register_activation_hook( __FILE__, 'supershows_tradeshows_activate' );
+
+if ( is_admin() ) {
+	SuperShows_TradeShows_Admin::init();
+}

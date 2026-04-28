@@ -1,0 +1,57 @@
+.supershows-admin-wrap {
+	max-width: 1200px;
+}
+
+.supershows-form {
+	margin-top: 16px;
+}
+
+.supershows-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	padding: 20px;
+	margin-bottom: 20px;
+}
+
+.supershows-card h3 {
+	margin-top: 0;
+	margin-bottom: 16px;
+}
+
+.supershows-grid {
+	display: grid;
+	gap: 14px;
+}
+
+.supershows-grid-3 {
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.supershows-grid-4 {
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.supershows-grid-5 {
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.supershows-label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.supershows-input {
+	width: 100%;
+}
+
+.supershows-media-wrap {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.supershows-media-wrap .button {
+	white-space: nowrap;
+}
