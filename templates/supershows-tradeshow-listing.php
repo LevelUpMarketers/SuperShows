@@ -27,6 +27,7 @@ $industry  = array();
 $gallery   = array();
 $logo_id   = 0;
 $socials   = array();
+$icon_base = trailingslashit( site_url( '/wp-content/plugins/sp-directory/assets/images' ) );
 if ( $trade_show ) {
 	$address  = json_decode( (string) $trade_show->address_json, true );
 	$imagery  = json_decode( (string) $trade_show->imagery_json, true );
@@ -61,20 +62,20 @@ if ( $trade_show ) {
 			<div class="sd-entry__grid">
 				<aside class="sd-card">
 					<h3><?php esc_html_e( 'Overview', 'supershows-tradeshows-directory' ); ?></h3>
-					<dl class="sd-meta">
-						<div class="sd-meta__row"><div class="sd-meta__text"><dt><?php esc_html_e( 'Industries', 'supershows-tradeshows-directory' ); ?></dt><dd><?php echo esc_html( implode( ', ', is_array( $industry ) ? $industry : array() ) ); ?></dd></div></div>
-						<div class="sd-meta__row"><div class="sd-meta__text"><dt><?php esc_html_e( 'Start Date', 'supershows-tradeshows-directory' ); ?></dt><dd><?php echo esc_html( (string) ( $trade_show->start_datetime ?? '' ) ); ?></dd></div></div>
-					</dl>
-					<h3 style="margin-top:16px;"><?php esc_html_e( 'Location', 'supershows-tradeshows-directory' ); ?></h3>
-					<address class="sd-address"><?php echo esc_html( implode( ', ', array_filter( array( $address['street'] ?? '', $address['city'] ?? '', $address['state'] ?? '', $address['zip'] ?? '', $address['country'] ?? '' ) ) ) ); ?></address>
+						<dl class="sd-meta">
+							<div class="sd-meta__row"><img src="<?php echo esc_url( $icon_base . 'categories.svg' ); ?>" alt="" class="sd-meta__icon"><div class="sd-meta__text"><dt><?php esc_html_e( 'Category', 'supershows-tradeshows-directory' ); ?></dt><dd><?php echo esc_html( implode( ', ', is_array( $industry ) ? $industry : array() ) ); ?></dd></div></div>
+							<div class="sd-meta__row"><img src="<?php echo esc_url( $icon_base . 'customer.svg' ); ?>" alt="" class="sd-meta__icon"><div class="sd-meta__text"><dt><?php esc_html_e( 'Start Date', 'supershows-tradeshows-directory' ); ?></dt><dd><?php echo esc_html( (string) ( $trade_show->start_datetime ?? '' ) ); ?></dd></div></div>
+						</dl>
+						<h3 style="margin-top:16px;"><?php esc_html_e( 'Location', 'supershows-tradeshows-directory' ); ?></h3>
+						<address class="sd-address"><div class="sd-address__row"><img src="<?php echo esc_url( $icon_base . 'location.svg' ); ?>" alt="" class="sd-address__icon"><div><?php echo esc_html( implode( ', ', array_filter( array( $address['street'] ?? '', $address['city'] ?? '', $address['state'] ?? '', $address['zip'] ?? '', $address['country'] ?? '' ) ) ) ); ?></div></div></address>
 					<?php if ( ! empty( $trade_show->contact_phone ) || ! empty( $trade_show->contact_email ) ) : ?>
 						<h3 style="margin-top:16px;"><?php esc_html_e( 'Contact', 'supershows-tradeshows-directory' ); ?></h3>
 						<div class="sd-contact">
 							<?php if ( ! empty( $trade_show->contact_phone ) ) : ?>
-								<div class="sd-contact__row"><a class="sd-contact__link" href="<?php echo esc_url( 'tel:' . preg_replace( '/[^0-9+]/', '', (string) $trade_show->contact_phone ) ); ?>"><?php echo esc_html( (string) $trade_show->contact_phone ); ?></a></div>
+								<div class="sd-contact__row"><img src="<?php echo esc_url( $icon_base . 'phone.svg' ); ?>" alt="<?php esc_attr_e( 'Phone', 'supershows-tradeshows-directory' ); ?>" class="sd-contact__icon"><a class="sd-contact__link" href="<?php echo esc_url( 'tel:' . preg_replace( '/[^0-9+]/', '', (string) $trade_show->contact_phone ) ); ?>"><?php echo esc_html( (string) $trade_show->contact_phone ); ?></a></div>
 							<?php endif; ?>
 							<?php if ( ! empty( $trade_show->contact_email ) ) : ?>
-								<div class="sd-contact__row"><a class="sd-contact__link" href="<?php echo esc_url( 'mailto:' . (string) $trade_show->contact_email ); ?>"><?php echo esc_html( (string) $trade_show->contact_email ); ?></a></div>
+								<div class="sd-contact__row"><img src="<?php echo esc_url( $icon_base . 'email.svg' ); ?>" alt="<?php esc_attr_e( 'Email', 'supershows-tradeshows-directory' ); ?>" class="sd-contact__icon"><a class="sd-contact__link" href="<?php echo esc_url( 'mailto:' . (string) $trade_show->contact_email ); ?>"><?php echo esc_html( (string) $trade_show->contact_email ); ?></a></div>
 							<?php endif; ?>
 						</div>
 					<?php endif; ?>
@@ -83,7 +84,7 @@ if ( $trade_show ) {
 						<ul class="sd-connect">
 							<?php foreach ( $socials as $network => $url ) : ?>
 								<?php if ( ! empty( $url ) ) : ?>
-									<li><a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( strtoupper( substr( $network, 0, 1 ) ) ); ?></a></li>
+										<li><a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr( ucfirst( $network ) ); ?>"><span><?php echo esc_html( strtoupper( substr( $network, 0, 1 ) ) ); ?></span></a></li>
 								<?php endif; ?>
 							<?php endforeach; ?>
 						</ul>
