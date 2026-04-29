@@ -987,11 +987,12 @@ class SuperShows_TradeShows_Admin {
 		<div>
 			<label class="supershows-label" for="<?php echo esc_attr( $field_id ); ?>"><?php echo esc_html( $label ); ?></label>
 			<div class="supershows-media-wrap">
-				<input type="text" id="<?php echo esc_attr( $field_id ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text supershows-input" value="<?php echo esc_attr( $value ); ?>" />
+				<input type="text" id="<?php echo esc_attr( $field_id ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text supershows-input supershows-media-input" value="<?php echo esc_attr( $value ); ?>" />
 				<button type="button" class="button supershows-media-button" data-target="<?php echo esc_attr( $field_id ); ?>" data-multiple="<?php echo $multiple ? '1' : '0'; ?>">
 					<?php echo $multiple ? esc_html__( 'Select Images', 'supershows-tradeshows-directory' ) : esc_html__( 'Select Image', 'supershows-tradeshows-directory' ); ?>
 				</button>
 			</div>
+			<div class="supershows-media-preview" data-preview-for="<?php echo esc_attr( $field_id ); ?>"></div>
 		</div>
 		<?php
 	}
@@ -1082,11 +1083,12 @@ class SuperShows_TradeShows_Admin {
 		<div>
 			<label class="supershows-label" for="supershows-<?php echo esc_attr( $name ); ?>"><?php echo esc_html( $label ); ?></label>
 			<div class="supershows-media-wrap">
-				<input type="text" id="supershows-<?php echo esc_attr( $name ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text supershows-input" readonly />
+				<input type="text" id="supershows-<?php echo esc_attr( $name ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text supershows-input supershows-media-input" readonly />
 				<button type="button" class="button supershows-media-button" data-target="supershows-<?php echo esc_attr( $name ); ?>" data-multiple="<?php echo $multiple ? '1' : '0'; ?>">
 					<?php echo $multiple ? esc_html__( 'Select Images', 'supershows-tradeshows-directory' ) : esc_html__( 'Select Image', 'supershows-tradeshows-directory' ); ?>
 				</button>
 			</div>
+			<div class="supershows-media-preview" data-preview-for="supershows-<?php echo esc_attr( $name ); ?>"></div>
 		</div>
 		<?php
 	}
