@@ -25,6 +25,7 @@ define( 'SUPERSHOWS_TRADE_SHOWS_DB_VERSION', '1.1.0' );
 
 require_once SUPERSHOWS_TRADE_SHOWS_PATH . 'includes/class-supershows-tradeshows-activator.php';
 require_once SUPERSHOWS_TRADE_SHOWS_PATH . 'includes/class-supershows-tradeshows-admin.php';
+require_once SUPERSHOWS_TRADE_SHOWS_PATH . 'includes/class-supershows-tradeshows-frontend.php';
 
 /**
  * Runs plugin activation tasks.
@@ -39,3 +40,5 @@ register_activation_hook( __FILE__, 'supershows_tradeshows_activate' );
 if ( is_admin() ) {
 	SuperShows_TradeShows_Admin::init();
 }
+
+SuperShows_TradeShows_Frontend::init();
