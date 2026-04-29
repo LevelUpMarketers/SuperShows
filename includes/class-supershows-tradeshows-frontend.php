@@ -13,6 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Provides front-end shortcode UI for browsing trade shows.
  */
 class SuperShows_TradeShows_Frontend {
+	private const PER_PAGE = 9;
 
 	/**
 	 * Shortcode tag.
@@ -71,6 +72,7 @@ class SuperShows_TradeShows_Frontend {
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'supershows_search_tradeshows' ),
+				'perPage' => self::PER_PAGE,
 				'strings' => array(
 					'noResults' => __( 'No trade shows matched your search.', 'supershows-tradeshows-directory' ),
 					'error'     => __( 'Something went wrong while searching. Please try again.', 'supershows-tradeshows-directory' ),
@@ -86,8 +88,8 @@ class SuperShows_TradeShows_Frontend {
 	 * @return string
 	 */
 	public static function render_shortcode(): string {
-		$trade_shows = self::get_trade_shows();
-		$filters     = self::build_filter_options( $trade_shows );
+		$trade_shows = self::get_trade_shows( 1, self::PER_PAGE );
+		$filters     = self::build_filter_options( self::get_trade_shows() );
 
 		ob_start();
 		?>
@@ -139,6 +141,7 @@ class SuperShows_TradeShows_Frontend {
 				<?php foreach ( $trade_shows as $trade_show ) : ?>
 					<?php self::render_trade_show_card( $trade_show ); ?>
 				<?php endforeach; ?>
+				<div class="sd-directory-load-sentinel" aria-hidden="true"><div class="sd-directory-load-indicator"></div></div>
 			</div>
 			<div class="sd-directory-pagination"></div>
 		</div>
@@ -191,13 +194,16 @@ class SuperShows_TradeShows_Frontend {
 	 *
 	 * @return object[]
 	 */
-	private static function get_trade_shows(): array {
+	private static function get_trade_shows( int $page = 1, int $per_page = 0 ): array {
 		global $wpdb;
 
 		$table_name = SuperShows_TradeShows_Activator::table_name();
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$results = $wpdb->get_results( "SELECT * FROM {$table_name} ORDER BY start_year DESC, start_month DESC, name ASC" );
-		// phpcs:enable
+		$sql        = "SELECT * FROM {$table_name} ORDER BY start_datetime DESC, start_year DESC, start_month DESC, name ASC";
+		if ( $per_page > 0 ) {
+			$offset = max( 0, ( $page - 1 ) * $per_page );
+			$sql   .= $wpdb->prepare( ' LIMIT %d OFFSET %d', $per_page, $offset );
+		}
+		$results = $wpdb->get_results( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
 		return is_array( $results ) ? $results : array();
 	}
@@ -307,11 +313,16 @@ class SuperShows_TradeShows_Frontend {
 		$state      = isset( $_POST['state'] ) ? sanitize_text_field( wp_unslash( $_POST['state'] ) ) : '';
 		$month_year = isset( $_POST['month_year'] ) ? sanitize_text_field( wp_unslash( $_POST['month_year'] ) ) : '';
 
-		$results = self::search_trade_shows( $name, $industry, $state, $month_year );
+		$page     = isset( $_POST['page'] ) ? max( 1, absint( wp_unslash( $_POST['page'] ) ) ) : 1;
+		$per_page = isset( $_POST['per_page'] ) ? max( 1, absint( wp_unslash( $_POST['per_page'] ) ) ) : self::PER_PAGE;
+		$results  = self::search_trade_shows( $name, $industry, $state, $month_year, $page, $per_page );
+		$total    = self::count_trade_shows( $name, $industry, $state, $month_year );
 
 		wp_send_json_success(
 			array(
-				'items' => self::map_items_for_json( $results ),
+				'items'       => self::map_items_for_json( $results ),
+				'page'        => $page,
+				'total_pages' => (int) ceil( $total / $per_page ),
 			)
 		);
 	}
@@ -326,7 +337,7 @@ class SuperShows_TradeShows_Frontend {
 	 *
 	 * @return object[]
 	 */
-	private static function search_trade_shows( string $name, string $industry, string $state, string $month_year ): array {
+	private static function search_trade_shows( string $name, string $industry, string $state, string $month_year, int $page, int $per_page ): array {
 		global $wpdb;
 
 		$table_name = SuperShows_TradeShows_Activator::table_name();
@@ -357,7 +368,9 @@ class SuperShows_TradeShows_Frontend {
 			}
 		}
 
-		$sql = "SELECT * FROM {$table_name} WHERE " . implode( ' AND ', $where ) . ' ORDER BY start_year DESC, start_month DESC, name ASC';
+		$sql = "SELECT * FROM {$table_name} WHERE " . implode( ' AND ', $where ) . ' ORDER BY start_datetime DESC, start_year DESC, start_month DESC, name ASC LIMIT %d OFFSET %d';
+		$params[] = $per_page;
+		$params[] = max( 0, ( $page - 1 ) * $per_page );
 		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 		if ( ! empty( $params ) ) {
 			$sql = $wpdb->prepare( $sql, $params );
@@ -366,6 +379,23 @@ class SuperShows_TradeShows_Frontend {
 		// phpcs:enable
 
 		return is_array( $results ) ? $results : array();
+	}
+
+	private static function count_trade_shows( string $name, string $industry, string $state, string $month_year ): int {
+		global $wpdb;
+		$table_name = SuperShows_TradeShows_Activator::table_name();
+		$where      = array( '1=1' );
+		$params     = array();
+		if ( '' !== $name ) { $where[] = 'name LIKE %s'; $params[] = '%' . $wpdb->esc_like( $name ) . '%'; }
+		if ( '' !== $industry ) { $where[] = 'industries_search LIKE %s'; $params[] = '%' . $wpdb->esc_like( $industry ) . '%'; }
+		if ( '' !== $state ) { $where[] = 'address_state = %s'; $params[] = $state; }
+		if ( 1 === preg_match( '/^\d{4}-\d{2}$/', $month_year ) ) {
+			$parts = explode( '-', $month_year ); $year = (int) $parts[0]; $month = (int) $parts[1];
+			if ( $year > 0 && $month >= 1 && $month <= 12 ) { $where[] = 'start_year = %d'; $where[] = 'start_month = %d'; $params[] = $year; $params[] = $month; }
+		}
+		$sql = "SELECT COUNT(*) FROM {$table_name} WHERE " . implode( ' AND ', $where );
+		if ( ! empty( $params ) ) { $sql = $wpdb->prepare( $sql, $params ); }
+		return (int) $wpdb->get_var( $sql );
 	}
 
 	/**
