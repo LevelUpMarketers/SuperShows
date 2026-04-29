@@ -43,6 +43,7 @@ class SuperShows_TradeShows_Activator {
 			linkedin_url varchar(255) NOT NULL DEFAULT '',
 			youtube_url varchar(255) NOT NULL DEFAULT '',
 			imagery_json longtext NOT NULL,
+			logo_wordpress_image_id bigint(20) unsigned DEFAULT NULL,
 			page_id bigint(20) unsigned DEFAULT NULL,
 			dates_json longtext NOT NULL,
 			start_datetime datetime DEFAULT NULL,
