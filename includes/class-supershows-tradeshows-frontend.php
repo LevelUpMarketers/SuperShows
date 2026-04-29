@@ -47,7 +47,9 @@ class SuperShows_TradeShows_Frontend {
 			return;
 		}
 
-		if ( ! has_shortcode( $post->post_content, self::SHORTCODE ) ) {
+		$is_directory_shortcode = has_shortcode( $post->post_content, self::SHORTCODE );
+		$is_listing_template   = SuperShows_TradeShows_Template::template_slug() === get_page_template_slug( $post );
+		if ( ! $is_directory_shortcode && ! $is_listing_template ) {
 			return;
 		}
 
@@ -58,28 +60,30 @@ class SuperShows_TradeShows_Frontend {
 			SUPERSHOWS_TRADE_SHOWS_VERSION
 		);
 
-		wp_enqueue_script(
-			'supershows-tradeshows-frontend',
-			SUPERSHOWS_TRADE_SHOWS_URL . 'assets/js/frontend.js',
-			array(),
-			SUPERSHOWS_TRADE_SHOWS_VERSION,
-			true
-		);
+		if ( $is_directory_shortcode ) {
+			wp_enqueue_script(
+				'supershows-tradeshows-frontend',
+				SUPERSHOWS_TRADE_SHOWS_URL . 'assets/js/frontend.js',
+				array(),
+				SUPERSHOWS_TRADE_SHOWS_VERSION,
+				true
+			);
 
-		wp_localize_script(
-			'supershows-tradeshows-frontend',
-			'sdDirectoryParent',
-			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'supershows_search_tradeshows' ),
-				'perPage' => self::PER_PAGE,
-				'strings' => array(
-					'noResults' => __( 'No trade shows matched your search.', 'supershows-tradeshows-directory' ),
-					'error'     => __( 'Something went wrong while searching. Please try again.', 'supershows-tradeshows-directory' ),
-					'view'      => __( 'Learn More', 'supershows-tradeshows-directory' ),
-				),
-			)
-		);
+			wp_localize_script(
+				'supershows-tradeshows-frontend',
+				'sdDirectoryParent',
+				array(
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'nonce'   => wp_create_nonce( 'supershows_search_tradeshows' ),
+					'perPage' => self::PER_PAGE,
+					'strings' => array(
+						'noResults' => __( 'No trade shows matched your search.', 'supershows-tradeshows-directory' ),
+						'error'     => __( 'Something went wrong while searching. Please try again.', 'supershows-tradeshows-directory' ),
+						'view'      => __( 'Learn More', 'supershows-tradeshows-directory' ),
+					),
+				)
+			);
+		}
 	}
 
 	/**
