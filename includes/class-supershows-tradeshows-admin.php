@@ -421,6 +421,8 @@ class SuperShows_TradeShows_Admin {
 			return null;
 		}
 
+		update_post_meta( (int) $page_id, '_wp_page_template', SuperShows_TradeShows_Template::template_slug() );
+
 		return (int) $page_id;
 	}
 

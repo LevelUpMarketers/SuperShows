@@ -8,6 +8,7 @@ Custom WordPress plugin for SuperPath (`superpath.com`) that stores trade show d
 - Creates/updates table: `{$wpdb->prefix}supershows_tradeshows`.
 - Adds a WordPress admin page (`SuperShows`) with a create form tab for trade show data entry.
 - Adds shortcode `[supershows_tradeshows]` for a front-end directory-style trade show search UI and card grid.
+- Registers a custom page template for individual trade show pages and assigns it when a trade show page is created.
 - Stores raw JSON blobs for structured fields (`address`, `imagery`, `dates`, `industries`) while also storing searchable/sortable columns for key query paths:
   - `address_city`, `address_state`, `address_zip`
   - `start_datetime`, `start_month`, `start_year`
