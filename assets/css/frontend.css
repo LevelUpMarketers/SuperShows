@@ -86,6 +86,12 @@
 	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 	gap: 18px;
 	margin-bottom: 24px;
+	transition: opacity 0.25s ease;
+}
+
+.sd-directory-results.is-loading {
+	opacity: 0.35;
+	pointer-events: none;
 }
 
 .sd-directory-card {

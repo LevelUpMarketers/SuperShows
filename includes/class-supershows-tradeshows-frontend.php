@@ -27,6 +27,8 @@ class SuperShows_TradeShows_Frontend {
 	public static function init(): void {
 		add_shortcode( self::SHORTCODE, array( __CLASS__, 'render_shortcode' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
+		add_action( 'wp_ajax_supershows_search_tradeshows', array( __CLASS__, 'handle_search_ajax' ) );
+		add_action( 'wp_ajax_nopriv_supershows_search_tradeshows', array( __CLASS__, 'handle_search_ajax' ) );
 	}
 
 	/**
@@ -53,6 +55,28 @@ class SuperShows_TradeShows_Frontend {
 			SUPERSHOWS_TRADE_SHOWS_URL . 'assets/css/frontend.css',
 			array(),
 			SUPERSHOWS_TRADE_SHOWS_VERSION
+		);
+
+		wp_enqueue_script(
+			'supershows-tradeshows-frontend',
+			SUPERSHOWS_TRADE_SHOWS_URL . 'assets/js/frontend.js',
+			array(),
+			SUPERSHOWS_TRADE_SHOWS_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'supershows-tradeshows-frontend',
+			'sdDirectoryParent',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'supershows_search_tradeshows' ),
+				'strings' => array(
+					'noResults' => __( 'No trade shows matched your search.', 'supershows-tradeshows-directory' ),
+					'error'     => __( 'Something went wrong while searching. Please try again.', 'supershows-tradeshows-directory' ),
+					'view'      => __( 'Learn More', 'supershows-tradeshows-directory' ),
+				),
+			)
 		);
 	}
 
@@ -268,5 +292,109 @@ class SuperShows_TradeShows_Frontend {
 				static fn( string $value ) => '' !== trim( $value )
 			)
 		);
+	}
+
+	/**
+	 * Handles AJAX search requests for shortcode results.
+	 *
+	 * @return void
+	 */
+	public static function handle_search_ajax(): void {
+		check_ajax_referer( 'supershows_search_tradeshows', 'nonce' );
+
+		$name       = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
+		$industry   = isset( $_POST['industry'] ) ? sanitize_text_field( wp_unslash( $_POST['industry'] ) ) : '';
+		$state      = isset( $_POST['state'] ) ? sanitize_text_field( wp_unslash( $_POST['state'] ) ) : '';
+		$month_year = isset( $_POST['month_year'] ) ? sanitize_text_field( wp_unslash( $_POST['month_year'] ) ) : '';
+
+		$results = self::search_trade_shows( $name, $industry, $state, $month_year );
+
+		wp_send_json_success(
+			array(
+				'items' => self::map_items_for_json( $results ),
+			)
+		);
+	}
+
+	/**
+	 * Search utility for trade shows table.
+	 *
+	 * @param string $name       Name filter.
+	 * @param string $industry   Industry filter.
+	 * @param string $state      State filter.
+	 * @param string $month_year Month-year (YYYY-MM).
+	 *
+	 * @return object[]
+	 */
+	private static function search_trade_shows( string $name, string $industry, string $state, string $month_year ): array {
+		global $wpdb;
+
+		$table_name = SuperShows_TradeShows_Activator::table_name();
+		$where      = array( '1=1' );
+		$params     = array();
+
+		if ( '' !== $name ) {
+			$where[]  = 'name LIKE %s';
+			$params[] = '%' . $wpdb->esc_like( $name ) . '%';
+		}
+		if ( '' !== $industry ) {
+			$where[]  = 'industries_search LIKE %s';
+			$params[] = '%' . $wpdb->esc_like( $industry ) . '%';
+		}
+		if ( '' !== $state ) {
+			$where[]  = 'address_state = %s';
+			$params[] = $state;
+		}
+		if ( 1 === preg_match( '/^\d{4}-\d{2}$/', $month_year ) ) {
+			$parts = explode( '-', $month_year );
+			$year  = (int) $parts[0];
+			$month = (int) $parts[1];
+			if ( $year > 0 && $month >= 1 && $month <= 12 ) {
+				$where[]  = 'start_year = %d';
+				$where[]  = 'start_month = %d';
+				$params[] = $year;
+				$params[] = $month;
+			}
+		}
+
+		$sql = "SELECT * FROM {$table_name} WHERE " . implode( ' AND ', $where ) . ' ORDER BY start_year DESC, start_month DESC, name ASC';
+		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
+		if ( ! empty( $params ) ) {
+			$sql = $wpdb->prepare( $sql, $params );
+		}
+		$results = $wpdb->get_results( $sql );
+		// phpcs:enable
+
+		return is_array( $results ) ? $results : array();
+	}
+
+	/**
+	 * Maps rows to JSON-safe card data for JS rendering.
+	 *
+	 * @param object[] $rows Rows.
+	 * @return array<int, array<string, string>>
+	 */
+	private static function map_items_for_json( array $rows ): array {
+		$items = array();
+		foreach ( $rows as $row ) {
+			$logo_id    = absint( $row->logo_wordpress_image_id ?? 0 );
+			$logo_url   = ( $logo_id > 0 ) ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
+			$page_link  = '';
+			$industries = self::decode_json_list( $row->industries_json ?? '' );
+			if ( ! empty( $row->page_id ) ) {
+				$page_link = get_permalink( (int) $row->page_id );
+			}
+			if ( empty( $page_link ) && ! empty( $row->related_url ) ) {
+				$page_link = (string) $row->related_url;
+			}
+			$items[] = array(
+				'name'       => (string) ( $row->name ?? '' ),
+				'logo'       => (string) $logo_url,
+				'meta'       => implode( ' • ', $industries ),
+				'permalink'  => (string) $page_link,
+				'screenshot' => (string) $logo_url,
+			);
+		}
+		return $items;
 	}
 }
